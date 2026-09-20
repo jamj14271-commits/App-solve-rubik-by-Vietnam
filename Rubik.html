@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0e13">
+<!-- Thêm thẻ này để web hiển thị như App gốc trên điện thoại -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Rubik 3D App</title>
+<style>
+:root{--bg:#090c11;--panel:#11161e;--panel2:#171d27;--line:#293241;--text:#eef3f8;--muted:#8e9aaa;--accent:#6ea8ff;--good:#55d187;--red:#ef4444;--orange:#ff8a32;--yellow:#ffd43b;--green:#36c978;--blue:#4f8cff;--white:#f4f7fb;--shadow:0 18px 55px #0008;}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(circle at 50% -10%,#172238 0,#090c11 42%);color:var(--text);font:14px system-ui,-apple-system,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#0b0e13dd;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.logo{font-weight:800;font-size:18px;display:flex;gap:9px;align-items:center}.logo i{width:12px;height:12px;border-radius:3px;background:linear-gradient(135deg,var(--red),var(--yellow),var(--blue))}
+.tabs{display:flex;gap:5px;overflow:auto}.tabs button,.iconbtn,.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:9px 12px}.tabs button.active,.btn.primary{background:var(--accent);color:#07101e;border-color:transparent;font-weight:800}.iconbtn{padding:9px 11px}
+main{max-width:1200px;margin:auto;padding:18px 16px 60px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px}
+.card{background:linear-gradient(180deg,#121821,#0f141c);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.viewer{min-height:610px;position:relative;display:flex;flex-direction:column;overflow:hidden}
+.viewer-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);gap:10px}.viewer-head small{color:var(--muted)}
+.stage{position:relative;flex:1;min-height:500px;display:grid;place-items:center;overflow:hidden;touch-action:none;cursor:grab}
+.cube{width:220px;height:220px;position:relative;transform-style:preserve-3d;transform:rotateX(-24deg) rotateY(-34deg);transition:transform .18s ease}
+.cubie{position:absolute;width:68px;height:68px;left:76px;top:76px;transform-style:preserve-3d;backface-visibility:visible}
+.sticker{position:absolute;width:66px;height:66px;border:2px solid #080a0e;border-radius:8px;box-shadow:inset 0 0 0 1px #ffffff1c}
+.sF{transform:translateZ(34px)}.sB{transform:rotateY(180deg) translateZ(34px)}
+.sR{transform:rotateY(90deg) translateZ(34px)}.sL{transform:rotateY(-90deg) translateZ(34px)}
+.sU{transform:rotateX(90deg) translateZ(34px)}.sD{transform:rotateX(-90deg) translateZ(34px)}
+.w{background:var(--white)}.y{background:var(--yellow)}.r{background:var(--red)}.o{background:var(--orange)}.g{background:var(--green)}.b{background:var(--blue)}.k{background:#11161d}
+.controls{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;padding:13px;border-top:1px solid var(--line)}
+.move{min-height:42px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);font-weight:800}.move:active{transform:scale(.96)}
+.scramble{padding:12px 16px;border-top:1px solid var(--line);color:var(--muted);line-height:1.7}.scramble b{color:var(--text)}
+.side{display:flex;flex-direction:column;gap:16px}.panel{padding:15px}.panel h3{margin:0 0 12px;font-size:15px}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+select,input{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:10px;width:100%}
+.btn{font-weight:700}.btn.good{background:var(--good);color:#06120b;border-color:transparent}
+.player{display:none}.player.show{display:block}.range{width:100%;accent-color:var(--accent)}
+.help{color:var(--muted);font-size:12px;line-height:1.65}
+.color-editor{display:grid;grid-template-columns:repeat(9,1fr);gap:6px;margin:12px 0}.slot{aspect-ratio:1;border-radius:6px;border:2px solid #000;background:#222;cursor:pointer}.slot.selected{outline:2px solid white;outline-offset:1px}
+.palette{display:flex;gap:7px;flex-wrap:wrap}.sw{width:35px;height:35px;border-radius:7px;border:2px solid #000}.sw.sel{outline:2px solid white}
+.notice{padding:10px;border:1px solid #35517b;background:#101d31;border-radius:10px;color:#bcd5ff;margin-top:10px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.viewer{min-height:520px}}
+@media(max-width:600px){main{padding:10px}.top{align-items:flex-start}.side{display:flex}.viewer{min-height:500px}.cube{transform:scale(.82) rotateX(-24deg) rotateY(-34deg)}.controls{grid-template-columns:repeat(6,1fr);padding:9px;gap:5px}.move{min-height:38px;font-size:12px}.color-editor{grid-template-columns:repeat(6,1fr)}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo"><i></i> Rubik 3D App</div>
+  <nav class="tabs"><button class="active" data-page="solve">Giải</button><button data-page="input">Nhập màu</button></nav>
+</header>
+<main>
+<section id="solve">
+<div class="layout">
+  <div class="card viewer">
+    <div class="viewer-head"><div><b id="methodLabel">Thuật toán Máy chủ</b><br><small>Kéo thả để xoay khối</small></div><div class="row" style="flex:0 0 auto"><button class="iconbtn" id="reset">↺</button><button class="iconbtn" id="random">⌘</button></div></div>
+    <div class="stage" id="stage"><div class="cube" id="cube"></div></div>
+    <div class="controls" id="moves"></div>
+    <div class="scramble"><b>Trạng thái:</b> <span id="scrambleText">Chưa xáo trộn</span></div>
+  </div>
+  <aside class="side">
+    <div class="card panel">
+      <h3>Điều khiển</h3>
+      <div class="row"><button class="btn" id="scramble">Xáo trộn ngẫu nhiên</button></div>
+      <div class="row" style="margin-top:9px"><button class="btn primary" id="solve">Yêu cầu Server Giải</button><button class="btn" id="stop">Dừng</button></div>
+      <div class="player" id="player">
+        <div style="margin-top:10px" class="row"><button class="btn" id="prev">←</button><button class="btn" id="next">→</button><button class="btn" id="play">▶</button></div>
+        <input class="range" id="seek" type="range" min="0" value="0" step="1">
+        <div id="stepText" class="help">Bước 0</div>
+      </div>
+    </div>
+    <div class="card panel"><div class="notice" id="explain">Đang chờ lệnh...</div></div>
+  </aside>
+</div>
+</section>
+<section id="input" style="display:none">
+<div class="card panel" style="max-width:900px;margin:auto">
+<h2>Nhập màu cube</h2>
+<div id="faceNames" class="help">U • R • F • D • L • B</div>
+<div class="color-editor" id="editor"></div><div class="palette" id="palette"></div>
+<div class="row" style="margin-top:12px"><button class="btn" id="fillSolved">Reset</button><button class="btn good" id="useColors">Gửi trạng thái này</button></div>
+<div class="notice" id="colorMsg">Màu tâm (ô giữa mỗi mặt) cố định.</div>
+</div>
+</section>
+</main>
+<script>
+// THAY ĐỔI DÒNG NÀY BẰNG LINK RENDER CỦA BẠN SAU KHI DEPLOY
+const API_URL = 'https://rubik-cfop-api.onrender.com/solve';
+
+const COLORS={U:'w',R:'r',F:'g',D:'y',L:'o',B:'b'}, moves=['U','D','L','R','F','B'];
+let history=[], solution=[], playing=false, timer=null, viewX=-24, viewY=-34, cubies=[];
+const cubeEl=document.getElementById('cube'), stage=document.getElementById('stage');
+
+const FACE_VEC={F:[0,0,1],B:[0,0,-1],R:[1,0,0],L:[-1,0,0],U:[0,1,0],D:[0,-1,0]};
+const VEC_FACE={'0,0,1':'F','0,0,-1':'B','1,0,0':'R','-1,0,0':'L','0,1,0':'U','0,-1,0':'D'};
+
+function rotateVector(v,axis,sign){
+  const [x,y,z]=v;
+  if(axis==='x') return [x,-sign*z,sign*y];
+  if(axis==='y') return [sign*z,y,-sign*x];
+  return [-sign*y,sign*x,z];
+}
+function rotateFace(face,axis,sign){ return VEC_FACE[rotateVector(FACE_VEC[face],axis,sign).join(',')]; }
+function setStickerFace(sticker,face){
+  const color=sticker.dataset.color || 'k';
+  sticker.className=`sticker s${face} ${color}`; sticker.dataset.face=face;
+}
+
+function makeCube(){
+  cubeEl.innerHTML=''; cubies=[];
+  for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++){
+    const c=document.createElement('div');c.className='cubie';
+    c.dataset.x=x;c.dataset.y=y;c.dataset.z=z;
+    const faces=[['F',z===1],['B',z===-1],['R',x===1],['L',x===-1],['U',y===1],['D',y===-1]];
+    for(const [f,yes] of faces)if(yes){
+      const st=document.createElement('div');
+      st.className='sticker s'+f+' '+COLORS[f];
+      st.dataset.face=f; st.dataset.color=COLORS[f];
+      c.appendChild(st);
+    }
+    cubeEl.appendChild(c);cubies.push(c);
+  }
+}
+function renderCubies(){
+  for(const c of cubies){
+    const x=+c.dataset.x,y=+c.dataset.y,z=+c.dataset.z;
+    c.style.transform=`translate3d(${x*68}px,${-y*68}px,${z*68}px)`;
+  }
+  cubeEl.style.transform=`rotateX(${viewX}deg) rotateY(${viewY}deg)`;
+}
+
+function turn(move, record=true){
+  const base=move[0], amount=move.endsWith('2')?2:1, dir=move.includes("'")?-1:1;
+  for(let k=0;k<amount;k++){
+    const axis={U:'y',D:'y',L:'x',R:'x',F:'z',B:'z'}[base];
+    const layer={U:1,D:-1,L:-1,R:1,F:1,B:-1}[base];
+    const sign=dir*({D:-1,B:-1,L:-1}[base]||1);
+    const affected=cubies.filter(c=>+c.dataset[axis]===layer);
+    affected.forEach(c=>{
+      const x=+c.dataset.x,y=+c.dataset.y,z=+c.dataset.z;
+      let nx=x,ny=y,nz=z;
+      if(axis==='x'){ny=-sign*z;nz=sign*y} if(axis==='y'){nx=sign*z;nz=-sign*x} if(axis==='z'){nx=-sign*y;ny=sign*x}
+      c.querySelectorAll('.sticker').forEach(st=>{ setStickerFace(st,rotateFace(st.dataset.face,axis,sign)); });
+      c.dataset.x=nx;c.dataset.y=ny;c.dataset.z=nz;
+      const next=`translate3d(${nx*68}px,${-ny*68}px,${nz*68}px)`;
+      c.style.transform=next;
+    });
+  }
+  if(record){history.push(move);}
+}
+
+function inverse(m){return m.endsWith('2')?m:m.endsWith("'")?m[0]:m+"'"}
+function stop(){playing=false;if(timer)clearTimeout(timer);timer=null}
+function reset(){stop();makeCube();history=[];solution=[];viewX=-24;viewY=-34;renderCubies();document.getElementById('scrambleText').textContent='Chưa xáo trộn';document.getElementById('player').classList.remove('show');}
+
+function scrambleCube(){
+  reset();
+  let last='';
+  for(let i=0;i<20;i++){let m=moves[Math.floor(Math.random()*moves.length)];while(m===last)m=moves[Math.floor(Math.random()*moves.length)];last=m;let suffix=['',"'","2"][Math.floor(Math.random()*3)];turn(m+suffix);}
+  renderCubies();
+  document.getElementById('scrambleText').textContent=history.join(' ');
+}
+
+// Gọi API Giải
+async function solve(){
+  stop(); 
+  if(!history.length){document.getElementById('explain').textContent='Cube đang ở trạng thái ban đầu.';return}
+  
+  document.getElementById('explain').textContent='Đang gửi lên Server để tính toán...';
+  
+  // Ánh xạ trạng thái màu cho API
+  const colorToFace = { w: 'U', r: 'R', g: 'F', y: 'D', o: 'L', b: 'B' };
+  const stateString = colorState.map(c => colorToFace[c]).join('');
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ state: stateString })
+    });
+    const data = await res.json();
+    
+    if(data.status === 'success'){
+      solution = data.solution;
+      document.getElementById('explain').textContent = `Server trả về ${solution.length} bước.`;
+      runPlayer();
+    } else {
+      document.getElementById('explain').textContent = 'Lỗi từ Server: ' + data.message;
+    }
+  } catch(e) {
+    document.getElementById('explain').textContent = 'Lỗi kết nối API. Hãy kiểm tra lại link Render.';
+  }
+}
+
+function runPlayer(){
+  document.getElementById('player').classList.add('show');
+  document.getElementById('seek').max=solution.length;
+  document.getElementById('seek').value=0;
+  playing=true; let i=0;
+  const step=()=>{
+    if(!playing||i>=solution.length){playing=false;return} 
+    turn(solution[i],false); renderCubies();
+    document.getElementById('seek').value=i+1;
+    document.getElementById('stepText').textContent=`Bước ${i+1}/${solution.length}: ${solution[i]}`;
+    i++; timer=setTimeout(step, 500);
+  };
+  step();
+}
+
+function buildMoves(){
+  const box=document.getElementById('moves');box.innerHTML='';
+  moves.forEach(f=>['','\'','2'].forEach(s=>{let b=document.createElement('button');b.className='move';b.textContent=f+s;b.onclick=()=>{stop();turn(f+s);renderCubies();};box.appendChild(b)}));
+}
+
+// Chuyển Tab
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('main section').forEach(s=>s.style.display='none');
+  document.getElementById(b.dataset.page).style.display='block';
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('active',x===b));
+});
+
+// Color Editor
+const faceOrder=['U','R','F','D','L','B'], colorList=['w','y','r','o','g','b'];
+let colorState=[], selectedColor='w';
+function solvedColors(){return faceOrder.flatMap(f=>Array(9).fill(COLORS[f]))}
+function renderEditor(){
+  const ed=document.getElementById('editor');ed.innerHTML='';
+  colorState.forEach((c,i)=>{let s=document.createElement('button');s.className='slot '+c;s.onclick=()=>{colorState[i]=selectedColor;renderEditor()};ed.appendChild(s)});
+}
+function renderPalette(){
+  const p=document.getElementById('palette');p.innerHTML='';
+  colorList.forEach(c=>{let b=document.createElement('button');b.className='sw '+c+(selectedColor===c?' sel':'');b.onclick=()=>{selectedColor=c;renderPalette()};p.appendChild(b)});
+}
+
+document.getElementById('scramble').onclick=scrambleCube;
+document.getElementById('random').onclick=scrambleCube;
+document.getElementById('reset').onclick=reset;
+document.getElementById('solve').onclick=solve;
+document.getElementById('stop').onclick=stop;
+document.getElementById('fillSolved').onclick=()=>{colorState=solvedColors();renderEditor()};
+document.getElementById('useColors').onclick=()=>{
+  document.querySelector('[data-page="solve"]').click();
+  document.getElementById('scrambleText').textContent='Trạng thái tùy chỉnh đã nạp. Nhấn Yêu cầu Server.';
+};
+
+makeCube();buildMoves();renderCubies();colorState=solvedColors();renderEditor();renderPalette();
+</script>
+</body>
+</html>
